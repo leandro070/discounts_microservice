@@ -3,18 +3,28 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func main() {
 	cMongo := getMongoClient()
 
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"PUT", "GET", "POST"},
+		AllowHeaders:     []string{"Origin, Authorization, Content-Type"},
+		ExposeHeaders:    []string{""},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	v1 := r.Group("/v1")
 	{
