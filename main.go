@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -13,7 +14,7 @@ import (
 )
 
 func main() {
-	cMongo := getMongoClient()
+	client := getMongoClient()
 
 	r := gin.Default()
 
@@ -28,7 +29,9 @@ func main() {
 
 	v1 := r.Group("/v1")
 	{
-		v1.GET("/", Root)
+		v1.GET("/", func(c *gin.Context) {
+			c.String(http.StatusOK, "Hello")
+		})
 	}
 
 	r.Run(":3030")
@@ -36,7 +39,7 @@ func main() {
 
 func getMongoClient() *mongo.Client {
 	clientOpt := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.NewClient()
+	client, err := mongo.NewClient(clientOpt)
 	if err != nil {
 		log.Fatal(err)
 	}
