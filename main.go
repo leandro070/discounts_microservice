@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/leandro070/discounts_microservice/utils/env"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -26,6 +28,8 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+
+	r.Use(static.Serve("/", static.LocalFile(env.Get().WWWWPath, true)))
 
 	v1 := r.Group("/v1")
 	{
