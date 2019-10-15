@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nmarsollier/imagego/tools/env"
-	"github.com/nmarsollier/imagego/tools/errors"
+	"github.com/leandro070/discounts_microservice/utils/env"
+	"github.com/leandro070/discounts_microservice/utils/errors"
 	gocache "github.com/patrickmn/go-cache"
 	validator "gopkg.in/go-playground/validator.v9"
 )

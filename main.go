@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/leandro070/discounts_microservice/gateway/rabbit"
 	"github.com/leandro070/discounts_microservice/utils/env"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	rabbit.Init()
-	
+
 	client := getMongoClient()
 
 	r := gin.Default()
@@ -36,11 +36,10 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	
 	v1 := r.Group("/v1")
 	{
 		v1.Use(static.Serve("/", static.LocalFile(env.Get().WWWWPath, true)))
-		
+
 	}
 
 	r.Run(":3030")
