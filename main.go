@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -16,6 +17,12 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 {
+		env.Load(os.Args[1])
+	}
+
+	rabbit.Init()
+	
 	client := getMongoClient()
 
 	r := gin.Default()
@@ -29,13 +36,11 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.Use(static.Serve("/", static.LocalFile(env.Get().WWWWPath, true)))
-
+	
 	v1 := r.Group("/v1")
 	{
-		v1.GET("/", func(c *gin.Context) {
-			c.String(http.StatusOK, "Hello")
-		})
+		v1.Use(static.Serve("/", static.LocalFile(env.Get().WWWWPath, true)))
+		
 	}
 
 	r.Run(":3030")
