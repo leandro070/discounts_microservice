@@ -6,25 +6,29 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/leandro070/discounts_microservice/gateway/db"
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/leandro070/discounts_microservice/utils/errors"
 )
 
 // NewCoupon se encargará de crear un cupón y sus restricciones asociadas
 func NewCoupon(c *gin.Context) {
 	s, ctx := db.GetMongo()
 
+	var coupon Coupon
+	err := c.BindJSON(&coupon)
+	err = validate(coupon)
+	if err != nil {
+		errors.Handle(c, err)
+	}
+
 	col := s.Database("discount").Collection("coupons")
 
-	filter := bson.M{"coupons": bson.M{"$elemMatch": bson.M{"$eq": "golang"}}}
-
-	// find one document
-	var coupon Coupon
-	if err := col.FindOne(ctx, filter).Decode(&coupon); err != nil {
+	result, err := col.InsertOne(ctx, coupon)
+	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Printf("coupon: %+v\n", c)
+	fmt.Printf("coupon: %+v\n", coupon)
 
 	c.JSON(200, gin.H{
-		"coupons": "go",
+		"coupons": result,
 	})
 }
