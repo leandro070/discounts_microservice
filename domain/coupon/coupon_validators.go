@@ -1,27 +1,21 @@
 package coupon
 
 import (
-	"fmt"
-
-	"github.com/leandro070/discounts_microservice/utils/errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func validate(obj interface{}) error {
-
-	switch obj.(type) {
-	case Coupon:
-		return validateNewCoupon(obj)
-	}
+func (c NewCouponRequest) validateSchema() error {
 
 	return nil
 }
 
-func validateNewCoupon(obj interface{}) error {
-	coupon, ok := obj.(Coupon)
-	if ok != true {
-		return errors.NewCustom(400, "Coupon binding invalid")
+func validateCode(s *ServiceCupon, code string) bool {
+	coupon, err := s.repo.FindByCodeCoupon(code)
+	if err != nil {
+		return true // responde por error cuando no hay documento con ese code
 	}
-
-	fmt.Println(coupon.Description)
-	return nil
+	if coupon.ID != primitive.NilObjectID {
+		return false
+	}
+	return false
 }
