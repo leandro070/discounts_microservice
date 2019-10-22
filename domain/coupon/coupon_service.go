@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 // ServiceCupon contendrá instancias a repositorio
@@ -33,7 +34,8 @@ func NewService() (ServiceCupon, error) {
 func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (NewCouponResponse, error) {
 	var res NewCouponResponse
 
-	err := req.validateSchema()
+	validate := validator.New()
+	err := validate.Struct(req)
 	if err != nil {
 		return res, err
 	}

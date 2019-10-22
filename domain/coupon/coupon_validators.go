@@ -4,11 +4,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (c NewCouponRequest) validateSchema() error {
-
-	return nil
-}
-
 func validateCode(s *ServiceCupon, code string) bool {
 	coupon, err := s.repo.FindByCodeCoupon(code)
 	if err != nil {
