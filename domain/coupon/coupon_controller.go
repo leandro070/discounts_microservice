@@ -12,7 +12,6 @@ func NewCoupon(c *gin.Context) {
 	err := c.ShouldBindJSON(&coupon)
 	if err != nil {
 		errors.Handle(c, err)
-		panic(err.Error)
 		return
 	}
 
@@ -29,7 +28,28 @@ func NewCoupon(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"coupons": res,
+		"result": res,
 	})
+}
 
+// GetCoupon se encargará de recibir un código de descuento, validar la existencia y vigencia del cupón.
+func GetCoupon(c *gin.Context) {
+
+	couponID := c.Param("id")
+
+	couponService, err := NewService()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	res, err := couponService.GetCoupon(couponID)
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"result": res,
+	})
 }

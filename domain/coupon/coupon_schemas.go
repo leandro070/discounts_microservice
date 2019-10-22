@@ -45,18 +45,16 @@ type NewCouponRequest struct {
 	CouponType  string                     `json:"coupon_type"`
 }
 
-// NewCouponResponse is a new coupon DTO
-type NewCouponResponse struct {
-	ID          primitive.ObjectID          `json:"id"`
-	Description string                      `json:"description"`
-	Amount      float32                     `json:"amount"`
-	Percentage  uint8                       `json:"percentage"`
-	IsEnable    bool                        `json:"is_enable"`
-	Code        string                      `json:"code"`
-	Constraint  NewCouponConstraintResponse `json:"constraint"`
-	CouponType  string                      `json:"coupon_type"`
-	UpdatedAt   time.Time                   `json:"update_at"`
-	CreatedAt   time.Time                   `json:"created_at"`
+// CouponResponse is a new coupon DTO
+type CouponResponse struct {
+	ID          primitive.ObjectID       `json:"id"`
+	Description string                   `json:"description"`
+	Amount      float32                  `json:"amount"`
+	Percentage  uint8                    `json:"percentage"`
+	IsEnable    bool                     `json:"is_enable"`
+	Code        string                   `json:"code"`
+	Constraint  CouponConstraintResponse `json:"constraint"`
+	CouponType  string                   `json:"coupon_type"`
 }
 
 // NewCouponConstraintRequest is a new coupon constraint DTO
@@ -71,8 +69,8 @@ type NewCouponConstraintRequest struct {
 	Combinable   bool      `json:"combinable" validate:"required"`
 }
 
-// NewCouponConstraintResponse is a new coupon constraint DTO
-type NewCouponConstraintResponse struct {
+// CouponConstraintResponse is a new coupon constraint DTO
+type CouponConstraintResponse struct {
 	ID           primitive.ObjectID `json:"id"`
 	ValidityFrom time.Time          `json:"validity_from"`
 	ValidityTo   time.Time          `json:"validity_to"`

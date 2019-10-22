@@ -15,8 +15,8 @@ type ServiceCupon struct {
 
 // Service es la interfaz que contenga todas las acciones a realizar
 type Service interface {
-	NewCoupon(coupon *NewCouponRequest) (NewCouponConstraintResponse, error)
-	NewCouponConstraint(constraint *NewCouponConstraintRequest)
+	NewCoupon(coupon *NewCouponRequest) (CouponConstraintResponse, error)
+	GetCoupon(couponID string) (CouponResponse, error)
 }
 
 // NewService retorna una nueva instancia del servicio
@@ -31,8 +31,8 @@ func NewService() (ServiceCupon, error) {
 }
 
 // NewCoupon es el servicio que creará un nuevo cupon
-func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (NewCouponResponse, error) {
-	var res NewCouponResponse
+func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (CouponResponse, error) {
+	var res CouponResponse
 
 	validate := validator.New()
 	err := validate.Struct(req)
@@ -79,7 +79,7 @@ func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (NewCouponResponse, error
 		return res, err
 	}
 
-	res = NewCouponResponse{
+	res = CouponResponse{
 		ID:          coupon.ID,
 		Description: coupon.Description,
 		Code:        coupon.Code,
@@ -87,7 +87,7 @@ func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (NewCouponResponse, error
 		Percentage:  coupon.Percentage,
 		IsEnable:    coupon.IsEnable,
 		CouponType:  req.CouponType,
-		Constraint: NewCouponConstraintResponse{
+		Constraint: CouponConstraintResponse{
 			ID:           constraint.ID,
 			ValidityFrom: constraint.ValidityFrom,
 			ValidityTo:   constraint.ValidityTo,
@@ -121,4 +121,45 @@ func codeRandomGenerator(n int) string {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b)
+}
+
+// GetCoupon retorna un cupon segun el id enviado
+func (s ServiceCupon) GetCoupon(couponID string) (CouponResponse, error) {
+	var resp CouponResponse
+	id, err := primitive.ObjectIDFromHex(couponID)
+	if err != nil {
+		return resp, err
+	}
+	coupon, err := s.repo.FindByIDCoupon(id)
+	if err != nil {
+		return resp, err
+	}
+
+	constraint, err := s.repo.FindByIDCouponConstraint(coupon.ConstraintID)
+	if err != nil {
+		return resp, err
+	}
+
+	resp = CouponResponse{
+		ID:          coupon.ID,
+		Description: coupon.Description,
+		Amount:      coupon.Amount,
+		IsEnable:    coupon.IsEnable,
+		Code:        coupon.Code,
+		Percentage:  coupon.Percentage,
+		Constraint: CouponConstraintResponse{
+			ID:           constraint.ID,
+			ValidityFrom: constraint.ValidityFrom,
+			ValidityTo:   constraint.ValidityTo,
+			TotalUsage:   constraint.TotalUsage,
+			MaxAmount:    constraint.MaxAmount,
+			MaxItems:     constraint.MaxItems,
+			MaxUsage:     constraint.MaxUsage,
+			MinItems:     constraint.MinItems,
+			Combinable:   constraint.Combinable,
+		},
+		CouponType: coupon.CouponType,
+	}
+
+	return resp, nil
 }
