@@ -31,6 +31,7 @@ type CouponContraint struct {
 	MinItems     int32              `bson:"min_items"`
 	MaxItems     int32              `bson:"max_items"`
 	Combinable   bool               `bson:"combinable"`
+	IsEnable     bool               `bson:"is_enable"`
 	UpdatedAt    time.Time          `bson:"update_at"`
 	CreatedAt    time.Time          `bson:"created_at"`
 }

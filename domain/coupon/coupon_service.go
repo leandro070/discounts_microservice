@@ -52,6 +52,7 @@ func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (CouponResponse, error) {
 		MaxItems:     req.Constraint.MaxItems,
 		MinItems:     req.Constraint.MinItems,
 		Combinable:   req.Constraint.Combinable,
+		IsEnable:     true,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -162,4 +163,29 @@ func (s ServiceCupon) GetCoupon(couponID string) (CouponResponse, error) {
 	}
 
 	return resp, nil
+}
+
+/*
+	Al momento de dar de baja un coupon debo comunicarme con ORDER para saber si el cupon está en uso
+	en alguna ORDER. is_enable en false si o si...
+*/
+// AnnulCoupon da de baja un cupon
+func (s ServiceCupon) AnnulCoupon(couponID string) error {
+
+	id, err := primitive.ObjectIDFromHex(couponID)
+	if err != nil {
+		return err
+	}
+
+	coupon, err := s.repo.FindByIDCoupon(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.AnnulCoupon(coupon.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

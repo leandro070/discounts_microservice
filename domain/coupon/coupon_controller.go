@@ -53,3 +53,25 @@ func GetCoupon(c *gin.Context) {
 		"result": res,
 	})
 }
+
+// AnnulCoupon se encargará de recibir un código de descuento y darlo de baja.
+func AnnulCoupon(c *gin.Context) {
+
+	couponID := c.Param("id")
+
+	couponService, err := NewService()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	err = couponService.AnnulCoupon(couponID)
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"success": true,
+	})
+}
