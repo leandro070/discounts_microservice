@@ -42,9 +42,9 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	r.Use(static.Serve("/", static.LocalFile(env.Get().WWWWPath, true)))
 	v1 := r.Group("/v1")
 	{
-		v1.Use(static.Serve("/", static.LocalFile(env.Get().WWWWPath, true)))
 		v1.POST("/coupons", coupon.NewCoupon)
 		v1.GET("/coupons/:id", coupon.GetCoupon)
 		v1.DELETE("/coupons/:id", coupon.AnnulCoupon)

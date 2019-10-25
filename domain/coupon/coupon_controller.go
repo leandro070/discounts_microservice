@@ -5,6 +5,49 @@ import (
 	"github.com/leandro070/discounts_microservice/utils/errors"
 )
 
+/**
+    * @api {post} /v1/coupons Crear nuevo cupón
+    * @apiVersion 1.0.0
+    * @apiName Create
+	* @apiGroup Cupones
+	* @apiDescription se encargará de crear un cupón y sus restricciones asociadas
+    *
+    * @apiParam (Request body) {String} description Nombre del descuento
+    * @apiParam (Request body) {Number} [amount] Monto fijo de descuento
+    * @apiParam (Request body) {Number} [percentaje] Porcentaje de descuento
+    * @apiParam (Request body) {String} coupon_type Tipo de descuento ("fixed_amount" o "percentage")
+    * @apiParam (Request body) {Object} constraint Restricciones del cupón
+    * @apiParam (Request body) {Datetime} constraint.validity_from Fecha de vigencia desde
+    * @apiParam (Request body) {Datetime} constraint.validity_to Fecha de vigencia hasta
+	* @apiParam (Request body) {Number} constraint.total_usage Total de usos que tiene el cupon actualmente
+	* @apiParam (Request body) {Number} constraint.max_usage Máxima cantidad de usos posibles. 0 = Infinito
+	* @apiParam (Request body) {Number} constraint.max_amount Si el descuento va por porcentaje entonces monto máximo establece un limite de descuento. 0 = Sin limite
+	* @apiParam (Request body) {Number} constraint.min_items Permite que el descuento se aplique cuando hay mas de N items iguales. Ej: Un 2x1. 0 = Sin limites
+	* @apiParam (Request body) {Number} constraint.max_items Permite que al descuento se aplique a una cierta cantidad de items. 0 = Sin limites
+	* @apiParam (Request body) {Boolean} constraint.combinable Habilita que puedan combinarse con otros cupones.
+	*
+    * @apiExample {json} Body:
+	* 	{
+	* 	  "description": "Discount 1",
+	* 	  "amount": 0,
+	* 	  "percentage": null,
+	* 	  "coupon_type": "fixed_amount",
+	* 	  "constraint": {
+	* 	      "validity_from": "2019-09-06T22:00:00.00-03:00",
+	* 	      "validity_to": "2019-09-29T23:00:00.00-03:00",
+	* 	      "total_usage": 1,
+	* 	      "max_usage":20,
+	* 	      "max_amount": 182372,
+	* 	      "min_items": 2,
+	* 	      "max_items": 5,
+	* 	      "combinable": true
+	* 	  }
+	* 	}
+    *
+ * @apiUse AuthHeader
+ * @apiUse ParamValidationErrors
+ * @apiUse OtherErrors
+*/
 // NewCoupon se encargará de crear un cupón y sus restricciones asociadas
 func NewCoupon(c *gin.Context) {
 
