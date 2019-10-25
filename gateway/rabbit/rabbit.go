@@ -15,6 +15,8 @@ import (
 // ErrChannelNotInitialized Rabbit channel could not be initialized
 var ErrChannelNotInitialized = errors.NewCustom(400, "Channel not initialized")
 
+var channel *amqp.Channel
+
 type message struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`
@@ -29,6 +31,25 @@ func Init() {
 			time.Sleep(5 * time.Second)
 		}
 	}()
+}
+
+func getChannel() (*amqp.Channel, error) {
+	if channel == nil {
+		conn, err := amqp.Dial(env.Get().RabbitURL)
+		if err != nil {
+			return nil, err
+		}
+
+		ch, err := conn.Channel()
+		if err != nil {
+			return nil, err
+		}
+		channel = ch
+	}
+	if channel == nil {
+		return nil, ErrChannelNotInitialized
+	}
+	return channel, nil
 }
 
 /**
@@ -120,6 +141,51 @@ func listenLogout() error {
 	}()
 
 	fmt.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
+
+	return nil
+}
+
+func CouponDisable(couponID string) error {
+	send := message{
+		Type:    "coupon_disabled",
+		Message: couponID,
+	}
+
+	channel, err := getChannel()
+	if err != nil {
+		channel = nil
+		return err
+	}
+
+	err = channel.ExchangeDeclare(
+		"discount", // name
+		"fanout",   // type
+		false,      // durable
+		false,      // auto-deleted
+		false,      // internal
+		false,      // no-wait
+		nil,        // arguments
+	)
+
+	body, err := json.Marshal(send)
+	if err != nil {
+		return err
+	}
+
+	err = channel.Publish(
+		"auth", // exchange
+		"",     // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			Body: []byte(body),
+		})
+	if err != nil {
+		channel = nil
+		return err
+	}
+
+	log.Output(1, "Rabbit discunt disabled enviado")
 
 	return nil
 }

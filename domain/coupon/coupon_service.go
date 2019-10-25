@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/leandro070/discounts_microservice/gateway/rabbit"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -183,6 +185,11 @@ func (s ServiceCupon) AnnulCoupon(couponID string) error {
 	}
 
 	err = s.repo.AnnulCoupon(coupon.ID)
+	if err != nil {
+		return err
+	}
+
+	err = rabbit.CouponDisable(couponID)
 	if err != nil {
 		return err
 	}
