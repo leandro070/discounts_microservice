@@ -8,7 +8,7 @@ import (
 /**
     * @api {post} /v1/coupons Crear nuevo cupón
     * @apiVersion 1.0.0
-    * @apiName Create
+    * @apiName Create coupon
 	* @apiGroup Cupones
 	* @apiDescription se encargará de crear un cupón y sus restricciones asociadas
     *
@@ -75,6 +75,41 @@ func NewCoupon(c *gin.Context) {
 	})
 }
 
+/**
+    * @api {post} /v1/coupons/:id Devuelve el cupón
+    * @apiVersion 1.0.0
+    * @apiName Get coupon
+	* @apiGroup Cupones
+	* @apiDescription buscará un coupon y su restricción asociada
+    *
+    * @apiParam (Request body) {String} description Nombre del descuento
+ 	*
+    * @apiSuccessExample {json} Respuesta
+ 	*     HTTP/1.1 200 OK
+	* 	{
+	* 	  "id": "asd18cas18d15df1v6d"
+	* 	  "description": "Coupon $200",
+	*	  "code": "ASD123"
+	* 	  "amount": 200,
+	* 	  "percentage": 0,
+	* 	  "coupon_type": "fixed_amount",
+	* 	  "constraint": {
+	* 	      "id": "asd18cas18d15df1v6d",
+	*		  "validity_from": "2019-09-06T22:00:00.00-03:00",
+	* 	      "validity_to": "2019-09-29T23:00:00.00-03:00",
+	* 	      "total_usage": 1,
+	* 	      "max_usage": 20,
+	* 	      "max_amount": 182372,
+	* 	      "min_items": 2,
+	* 	      "max_items": 5,
+	* 	      "combinable": true
+	* 	  }
+	* 	}
+    *
+ 	* @apiUse AuthHeader
+ 	* @apiUse ParamValidationErrors
+ 	* @apiUse OtherErrors
+*/
 // GetCoupon se encargará de recibir un código de descuento, validar la existencia y vigencia del cupón.
 func GetCoupon(c *gin.Context) {
 
