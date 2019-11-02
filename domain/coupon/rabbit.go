@@ -1,4 +1,4 @@
-package rabbit
+package coupon
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ type message struct {
 }
 
 // Init se queda escuchando broadcasts de logout
-func Init() {
+func RabbitInit() {
 	go func() {
 		for {
 			listenLogout()

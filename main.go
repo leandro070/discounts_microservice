@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/leandro070/discounts_microservice/domain/coupon"
 	"github.com/leandro070/discounts_microservice/gateway/db"
-	"github.com/leandro070/discounts_microservice/gateway/rabbit"
 	"github.com/leandro070/discounts_microservice/utils/env"
 	"github.com/leandro070/discounts_microservice/utils/errors"
 	"github.com/leandro070/discounts_microservice/utils/security"
@@ -22,7 +21,7 @@ func main() {
 		env.Load(os.Args[1])
 	}
 
-	rabbit.Init()
+	coupon.RabbitInit()
 
 	err := db.InitMongoClient()
 	if err != nil {
