@@ -81,5 +81,5 @@ func getRemote(token string) (*User, error) {
 // Invalidate invalida un token del cache
 func Invalidate(token string) {
 	cache.Delete(token[7:])
-	log.Output(1, fmt.Sprintf("Token invalidado: %s", token))
+	log.Printf(fmt.Sprintf("Token invalidado: %s", token))
 }

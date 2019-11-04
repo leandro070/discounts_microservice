@@ -187,10 +187,14 @@ func (s ServiceCupon) AnnulCoupon(couponID string) error {
 		return err
 	}
 
-	err = CouponDisable(couponID)
+	err = couponDisable(couponID)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (s ServiceCupon) UseCoupon(couponCode string) error {
 	return nil
 }

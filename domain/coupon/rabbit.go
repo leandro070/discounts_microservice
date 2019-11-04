@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/leandro070/discounts_microservice/utils/env"
 	"github.com/leandro070/discounts_microservice/utils/errors"
 	"github.com/leandro070/discounts_microservice/utils/security"
@@ -27,7 +28,17 @@ func RabbitInit() {
 	go func() {
 		for {
 			listenLogout()
-			fmt.Println("RabbitMQ conectando en 5 segundos.")
+
+			log.Printf("RabbitMQ connecting in 5 seconds.")
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			listenCouponsEvents()
+
+			log.Printf("RabbitMQ connecting in 5 seconds")
 			time.Sleep(5 * time.Second)
 		}
 	}()
@@ -125,11 +136,11 @@ func listenLogout() error {
 		return err
 	}
 
-	fmt.Println("RabbitMQ conectado")
+	log.Printf("[*] Waiting for messages LOGOUT.")
 
 	go func() {
 		for d := range mgs {
-			log.Output(1, "Mensage recibido")
+			log.Printf("Mensage recibido")
 			newMessage := &message{}
 			err = json.Unmarshal(d.Body, newMessage)
 			if err == nil {
@@ -145,9 +156,9 @@ func listenLogout() error {
 	return nil
 }
 
-func CouponDisable(couponID string) error {
+func couponDisable(couponID string) error {
 	send := message{
-		Type:    "coupon_disabled",
+		Type:    "couponID",
 		Message: couponID,
 	}
 
@@ -173,10 +184,10 @@ func CouponDisable(couponID string) error {
 	}
 
 	err = channel.Publish(
-		"auth", // exchange
-		"",     // routing key
-		false,  // mandatory
-		false,  // immediate
+		"discount", // exchange
+		"",         // routing key
+		false,      // mandatory
+		false,      // immediate
 		amqp.Publishing{
 			Body: []byte(body),
 		})
@@ -185,7 +196,118 @@ func CouponDisable(couponID string) error {
 		return err
 	}
 
-	log.Output(1, "Rabbit discunt disabled enviado")
+	log.Printf("Rabbit discount disabled enviado")
 
 	return nil
 }
+
+func listenCouponsEvents() error {
+	conn, err := amqp.Dial(env.Get().RabbitURL)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	chn, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer chn.Close()
+	var args amqp.Table
+	err = chn.ExchangeDeclare(
+		"discount", // name
+		"direct",   // type
+		false,      // durable
+		false,      // auto-deleted
+		false,      // internal
+		false,      // no-wait
+		args,       // arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	queue, err := chn.QueueDeclare(
+		"discount", // name
+		false,      // durable
+		false,      // delete when unused
+		true,       // exclusive
+		false,      // no-wait
+		nil,        // arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	err = chn.QueueBind(
+		queue.Name, // queue name
+		"",         // routing key
+		"discount", // exchange
+		false,
+		nil)
+	if err != nil {
+		return err
+	}
+
+	mgs, err := chn.Consume(
+		queue.Name, // queue
+		"",         // consumer
+		false,      // auto-ack
+		false,      // exclusive
+		false,      // no-local
+		false,      // no-wait
+		nil,        // args
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[*] Waiting for messages USE COUPON.")
+
+	go func() {
+		for d := range mgs {
+			log.Printf("Mensage recibido")
+			newMessage := &message{}
+			err = json.Unmarshal(d.Body, newMessage)
+			log.Println(newMessage)
+			if err == nil {
+				if newMessage.Type == "use_coupon" {
+					result := gin.H{
+						"success": true,
+					}
+					//TODO: Hacer lo que hay que hacer
+					response, err := json.Marshal(result)
+					if err != nil {
+						return
+					}
+					log.Printf("[CorrelationId]", d.CorrelationId)
+					log.Printf("[ReplyTo]", d.ReplyTo)
+					err = channel.Publish(
+						"",
+						d.ReplyTo,
+						false,
+						false,
+						amqp.Publishing{
+							ContentType:   "application/json",
+							CorrelationId: d.CorrelationId,
+							Body:          response,
+						})
+					if err != nil {
+						log.Printf(err.Error())
+						return
+					}
+					log.Printf("use_coupon", "[CUPON]", newMessage.Message)
+					d.Ack(false)
+				}
+			} else {
+				log.Println("[ERROR]", err.Error())
+			}
+		}
+	}()
+
+	fmt.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
+
+	return nil
+}
+
+// {"type": "use_coupon", "message": "1234"} application/json
