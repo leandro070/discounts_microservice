@@ -1,6 +1,9 @@
 package coupon
 
 import (
+	"encoding/json"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/leandro070/discounts_microservice/utils/errors"
 )
@@ -152,4 +155,26 @@ func AnnulCoupon(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"success": true,
 	})
+}
+
+func UseCoupon(code string) ([]byte, error) {
+
+	serv, err := NewService()
+	if err != nil {
+		return nil, err
+	}
+
+	err = serv.UseCoupon(code)
+	if err != nil {
+		return nil, err
+	}
+
+	result := gin.H{"type": "use_coupon_response", "message": "true"}
+
+	response, err := json.Marshal(result)
+	if err != nil {
+		log.Printf("ERROR: fail marshal: %s", result)
+	}
+
+	return response, nil
 }

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/leandro070/discounts_microservice/utils/env"
 	"github.com/leandro070/discounts_microservice/utils/errors"
 	"github.com/leandro070/discounts_microservice/utils/security"
@@ -208,27 +208,16 @@ func listenCouponsEvents() error {
 	}
 	defer conn.Close()
 
-	chn, err := conn.Channel()
+	amqpChannel, err := conn.Channel()
 	if err != nil {
-		return err
+		log.Printf("ERROR: fail create channel: %s", err.Error())
+		os.Exit(1)
 	}
-	defer chn.Close()
-	var args amqp.Table
-	err = chn.ExchangeDeclare(
-		"discount", // name
-		"direct",   // type
-		false,      // durable
-		false,      // auto-deleted
-		false,      // internal
-		false,      // no-wait
-		args,       // arguments
-	)
-	if err != nil {
-		return err
-	}
+	defer amqpChannel.Close()
 
-	queue, err := chn.QueueDeclare(
-		"discount", // name
+	// create queue
+	queue, err := amqpChannel.QueueDeclare(
+		"discount", // channelname
 		false,      // durable
 		false,      // delete when unused
 		true,       // exclusive
@@ -236,20 +225,22 @@ func listenCouponsEvents() error {
 		nil,        // arguments
 	)
 	if err != nil {
-		return err
+		log.Printf("ERROR: fail create queue: %s", err.Error())
+		os.Exit(1)
 	}
 
-	err = chn.QueueBind(
-		queue.Name, // queue name
-		"",         // routing key
-		"discount", // exchange
-		false,
-		nil)
+	err = amqpChannel.Qos(
+		1,     // recuento de captación previa
+		0,     // tamaño de captación previa
+		false, // global
+	)
 	if err != nil {
-		return err
+		log.Printf("ERROR: Error al establecer QoS: %s", err.Error())
+		os.Exit(1)
 	}
 
-	mgs, err := chn.Consume(
+	// channel
+	msgChannel, err := amqpChannel.Consume(
 		queue.Name, // queue
 		"",         // consumer
 		false,      // auto-ack
@@ -259,55 +250,63 @@ func listenCouponsEvents() error {
 		nil,        // args
 	)
 	if err != nil {
-		return err
+		log.Printf("ERROR: fail create channel: %s", err.Error())
+		os.Exit(1)
 	}
 
 	log.Printf("[*] Waiting for messages USE COUPON.")
 
 	go func() {
-		for d := range mgs {
-			log.Printf("Mensage recibido")
-			newMessage := &message{}
-			err = json.Unmarshal(d.Body, newMessage)
-			log.Println(newMessage)
-			if err == nil {
-				if newMessage.Type == "use_coupon" {
-					result := gin.H{
-						"success": true,
-					}
-					//TODO: Hacer lo que hay que hacer
-					response, err := json.Marshal(result)
-					if err != nil {
-						return
-					}
-					log.Printf("[CorrelationId]", d.CorrelationId)
-					log.Printf("[ReplyTo]", d.ReplyTo)
-					err = channel.Publish(
-						"",
-						d.ReplyTo,
-						false,
-						false,
-						amqp.Publishing{
-							ContentType:   "application/json",
-							CorrelationId: d.CorrelationId,
-							Body:          response,
-						})
-					if err != nil {
-						log.Printf(err.Error())
-						return
-					}
-					log.Printf("use_coupon", "[CUPON]", newMessage.Message)
-					d.Ack(false)
+		for rabbitMsg := range msgChannel {
+			var msg message
+			err := json.Unmarshal(rabbitMsg.Body, &msg)
+			if err != nil {
+				log.Printf("ERROR: fail unmarshl: %s", rabbitMsg.Body)
+				return
+			}
+			log.Printf("INFO: received msg: %v", msg)
+			switch msg.Type {
+			case "use_coupon_request":
+				//TODO: Hacer lo que hay que hacer
+
+				response, err := UseCoupon(msg.Message)
+				if err != nil {
+					return
 				}
-			} else {
-				log.Println("[ERROR]", err.Error())
+
+				err = amqpChannel.Publish(
+					"",                // exchange
+					rabbitMsg.ReplyTo, // routing key
+					false,             // mandatory
+					false,             // immediate
+					amqp.Publishing{
+						ContentType:   "application/json",
+						Body:          response,
+						CorrelationId: rabbitMsg.CorrelationId,
+					})
+				if err != nil {
+					channel = nil
+					return
+				}
+				log.Println("Mensaje reenviado a:", "[REPLY_TO]", rabbitMsg.ReplyTo, "[CORRELATION_ID]", rabbitMsg.CorrelationId)
+
+				rabbitMsg.Ack(true)
 			}
 		}
 	}()
 
-	fmt.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
+	log.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
 
 	return nil
 }
 
-// {"type": "use_coupon", "message": "1234"} application/json
+// {"type": "use_coupon", "message": "UOATI8"}
+
+// reply := spec.CreateDocumentReply{
+// 	Uid:    docMsg.Uid,
+// 	Status: "Created",
+// }
+// msg := RabbitMsg{
+// 	QueueName: docMsg.ReplyTo,
+// 	Reply:     reply,
+// }

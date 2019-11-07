@@ -2,6 +2,7 @@ package coupon
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,6 +20,7 @@ type Repository interface {
 	FindByCodeCoupon(couponCode string) error
 	InsertCouponConstraint(coupon CouponContraint) (CouponContraint, error)
 	UpdateCouponConstraint(coupon CouponContraint) (CouponContraint, error)
+	FindByCodeContraint(couponCode string) (CouponContraint, error)
 	FindByIDCouponConstraint(constraintID primitive.ObjectID) (CouponContraint, error)
 	AnnulCoupon(couponID primitive.ObjectID) error
 }
@@ -115,6 +117,53 @@ func (d RepositoryCol) FindByCodeCoupon(couponCode string) (CouponSchema, error)
 	res := d.couponCollection.FindOne(context.Background(), filter)
 	err := res.Decode(&coupon)
 	return coupon, err
+}
+
+func (d RepositoryCol) FindByCodeContraint(couponCode string) (CouponContraint, error) {
+	var constraint CouponContraint
+	// pipeline := []bson.M{
+	// 	bson.M{"$lookup": bson.M{
+	// 		"from":         "cupons",
+	// 		"localField":   "_id",
+	// 		"foreignField": "constraint_id",
+	// 		"as":           "coupon",
+	// 		"pipeline": []bson.M{
+	// 			"$match": bson.M{
+	// 				"$expr": bson.M{
+	// 					"$eq": bson.M{"code": couponCode, "is_enable": true},
+	// 				},
+	// 			}},
+	// 	}},
+	// }
+	// cur, err := d.couponCollection.FindOne(context.Background(), pipeline)
+	// if err != nil {
+	// 	log.Fatal("[error]", err.Error())
+	// 	return constraints, err
+	// }
+	// defer cur.Close(context.Background())
+	// log.Println("sin error")
+	// elem := &bson.D{}
+	// cur.Decode(elem)
+	// log.Println("[decoded]", elem)
+	// for cur.Next(context.Background()) {
+	// 	elem := &bson.D{}
+	// 	if err := cur.Decode(elem); err != nil {
+	// 		log.Fatal(err.Error())
+	// 	}
+	// 	log.Println(elem)
+	// }
+
+	coupon, err := d.FindByCodeCoupon(couponCode)
+	if err != nil {
+		return constraint, err
+	}
+	constraint, err = d.FindByIDCouponConstraint(coupon.ConstraintID)
+	if err != nil {
+		return constraint, err
+	}
+	log.Println("[CUPON]", coupon)
+	log.Println("[REST]", constraint)
+	return constraint, nil
 }
 
 /*#############################################################################

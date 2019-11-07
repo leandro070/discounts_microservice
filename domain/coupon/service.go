@@ -1,6 +1,7 @@
 package coupon
 
 import (
+	"log"
 	"math/rand"
 	"time"
 
@@ -196,5 +197,12 @@ func (s ServiceCupon) AnnulCoupon(couponID string) error {
 }
 
 func (s ServiceCupon) UseCoupon(couponCode string) error {
+	contraint, err := s.repo.FindByCodeContraint(couponCode)
+	if err != nil {
+		return err
+	}
+
+	log.Println(contraint)
+
 	return nil
 }
