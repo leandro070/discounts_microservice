@@ -193,3 +193,39 @@ func UseCoupon(jsonData []byte) ([]byte, error) {
 
 	return response, nil
 }
+
+func ValidateCoupon(jsonData []byte) ([]byte, error) {
+	var constraint struct {
+		Code         string `json:"code"`
+		ItemsToApply int    `json:"items_to_apply"`
+	}
+
+	err := json.Unmarshal(jsonData, &constraint)
+	if err != nil {
+		log.Println("ERROR - ValidateCoupon - unmarshall ", err.Error())
+		return nil, err
+	}
+
+	serv, err := NewService()
+	if err != nil {
+		log.Println("ERROR - ValidateCoupon - create service", err.Error())
+		return nil, err
+	}
+
+	if len(constraint.Code) == 0 {
+		err := fmt.Errorf("coupon code empty")
+		log.Printf("ERROR - ValidateCoupon - %s", err.Error())
+		return nil, err
+	}
+
+	log.Printf("INFO - ValidateCoupon - Coupon to use: %s", constraint.Code)
+	err = serv.ValidateCoupon(constraint.Code, constraint.ItemsToApply)
+	if err != nil {
+		log.Println("ERROR - ValidateCoupon - Response:", err.Error())
+		return nil, err
+	}
+
+	response := []byte("Coupon valid")
+
+	return response, nil
+}

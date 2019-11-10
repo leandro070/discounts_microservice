@@ -18,6 +18,9 @@ type ServiceCupon struct {
 type Service interface {
 	NewCoupon(coupon *NewCouponRequest) (CouponConstraintResponse, error)
 	GetCoupon(couponID string) (CouponResponse, error)
+	AnnulCoupon(couponID string) error
+	UseCoupon(code string, itemsToApply int) error
+	ValidateCoupon(code string, itemsToApply int) error
 }
 
 // NewService retorna una nueva instancia del servicio
@@ -214,6 +217,25 @@ func (s ServiceCupon) UseCoupon(code string, itemsToApply int) error {
 	}
 
 	err = s.repo.IncrementTotalUse(contraint.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s ServiceCupon) ValidateCoupon(code string, itemsToApply int) error {
+
+	coupon, contraint, err := s.repo.FindByCodeContraint(code)
+	if err != nil {
+		return err
+	}
+
+	if coupon.ID == primitive.NilObjectID || contraint.ID == primitive.NilObjectID {
+		return fmt.Errorf("Coupon code not exist")
+	}
+
+	err = contraint.validate(itemsToApply)
 	if err != nil {
 		return err
 	}
