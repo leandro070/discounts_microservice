@@ -2,6 +2,7 @@ package coupon
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -157,24 +158,38 @@ func AnnulCoupon(c *gin.Context) {
 	})
 }
 
-func UseCoupon(code string) ([]byte, error) {
+func UseCoupon(jsonData []byte) ([]byte, error) {
+	var constraint struct {
+		Code         string `json:"code"`
+		ItemsToApply int    `json:"items_to_apply"`
+	}
+
+	err := json.Unmarshal(jsonData, &constraint)
+	if err != nil {
+		log.Println("ERROR - UseCoupon - unmarshall ", err.Error())
+		return nil, err
+	}
 
 	serv, err := NewService()
 	if err != nil {
+		log.Println("ERROR - UseCoupon - create service", err.Error())
 		return nil, err
 	}
 
-	err = serv.UseCoupon(code)
-	if err != nil {
+	if len(constraint.Code) == 0 {
+		err := fmt.Errorf("coupon code empty")
+		log.Printf("ERROR - UseCoupon - %s", err.Error())
 		return nil, err
 	}
 
-	result := gin.H{"type": "use_coupon_response", "message": "true"}
-
-	response, err := json.Marshal(result)
+	log.Printf("INFO - UseCoupon - Coupon to use: %s", constraint.Code)
+	err = serv.UseCoupon(constraint.Code, constraint.ItemsToApply)
 	if err != nil {
-		log.Printf("ERROR: fail marshal: %s", result)
+		log.Println("ERROR - UseCoupon - Response:", err.Error())
+		return nil, err
 	}
+
+	response := []byte("Success use cupon")
 
 	return response, nil
 }

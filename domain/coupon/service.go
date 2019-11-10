@@ -1,7 +1,7 @@
 package coupon
 
 import (
-	"log"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -132,6 +132,7 @@ func (s ServiceCupon) GetCoupon(couponID string) (CouponResponse, error) {
 	if err != nil {
 		return resp, err
 	}
+
 	coupon, err := s.repo.FindByIDCoupon(id)
 	if err != nil {
 		return resp, err
@@ -196,13 +197,26 @@ func (s ServiceCupon) AnnulCoupon(couponID string) error {
 	return nil
 }
 
-func (s ServiceCupon) UseCoupon(couponCode string) error {
-	contraint, err := s.repo.FindByCodeContraint(couponCode)
+func (s ServiceCupon) UseCoupon(code string, itemsToApply int) error {
+
+	coupon, contraint, err := s.repo.FindByCodeContraint(code)
 	if err != nil {
 		return err
 	}
 
-	log.Println(contraint)
+	if coupon.ID == primitive.NilObjectID || contraint.ID == primitive.NilObjectID {
+		return fmt.Errorf("Coupon code not exist")
+	}
+
+	err = contraint.validate(itemsToApply)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.IncrementTotalUse(contraint.ID)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

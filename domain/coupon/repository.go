@@ -23,6 +23,7 @@ type Repository interface {
 	FindByCodeContraint(couponCode string) (CouponContraint, error)
 	FindByIDCouponConstraint(constraintID primitive.ObjectID) (CouponContraint, error)
 	AnnulCoupon(couponID primitive.ObjectID) error
+	IncrementTotalUse(constraintID primitive.ObjectID) error
 }
 
 type RepositoryCol struct {
@@ -119,51 +120,21 @@ func (d RepositoryCol) FindByCodeCoupon(couponCode string) (CouponSchema, error)
 	return coupon, err
 }
 
-func (d RepositoryCol) FindByCodeContraint(couponCode string) (CouponContraint, error) {
+func (d RepositoryCol) FindByCodeContraint(couponCode string) (CouponSchema, CouponContraint, error) {
 	var constraint CouponContraint
-	// pipeline := []bson.M{
-	// 	bson.M{"$lookup": bson.M{
-	// 		"from":         "cupons",
-	// 		"localField":   "_id",
-	// 		"foreignField": "constraint_id",
-	// 		"as":           "coupon",
-	// 		"pipeline": []bson.M{
-	// 			"$match": bson.M{
-	// 				"$expr": bson.M{
-	// 					"$eq": bson.M{"code": couponCode, "is_enable": true},
-	// 				},
-	// 			}},
-	// 	}},
-	// }
-	// cur, err := d.couponCollection.FindOne(context.Background(), pipeline)
-	// if err != nil {
-	// 	log.Fatal("[error]", err.Error())
-	// 	return constraints, err
-	// }
-	// defer cur.Close(context.Background())
-	// log.Println("sin error")
-	// elem := &bson.D{}
-	// cur.Decode(elem)
-	// log.Println("[decoded]", elem)
-	// for cur.Next(context.Background()) {
-	// 	elem := &bson.D{}
-	// 	if err := cur.Decode(elem); err != nil {
-	// 		log.Fatal(err.Error())
-	// 	}
-	// 	log.Println(elem)
-	// }
+	var coupon CouponSchema
 
 	coupon, err := d.FindByCodeCoupon(couponCode)
 	if err != nil {
-		return constraint, err
+		return coupon, constraint, err
 	}
 	constraint, err = d.FindByIDCouponConstraint(coupon.ConstraintID)
 	if err != nil {
-		return constraint, err
+		return coupon, constraint, err
 	}
-	log.Println("[CUPON]", coupon)
-	log.Println("[REST]", constraint)
-	return constraint, nil
+	log.Println("[CUPON] Recuperado codigo:", coupon.Code)
+	log.Println("[RESTRICCION] Recuperado restriccion para codigo", coupon.Code)
+	return coupon, constraint, nil
 }
 
 /*#############################################################################
@@ -207,5 +178,20 @@ func (d RepositoryCol) AnnulContraint(constraintID primitive.ObjectID) error {
 		return err
 	}
 
+	return nil
+}
+
+func (d RepositoryCol) IncrementTotalUse(constraintID primitive.ObjectID) error {
+
+	filter := bson.M{"_id": bson.M{"$eq": constraintID}}
+
+	update := bson.D{{
+		"$inc", bson.D{{"total_usage", 1}},
+	}}
+
+	_, err := d.constraintCollection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
 	return nil
 }
