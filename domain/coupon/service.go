@@ -170,6 +170,44 @@ func (s ServiceCupon) GetCoupon(couponID string) (CouponResponse, error) {
 	return resp, nil
 }
 
+// GetCoupon retorna un cupon segun el id enviado
+func (s ServiceCupon) GetCouponByCode(code string) (CouponResponse, error) {
+	var resp CouponResponse
+
+	coupon, err := s.repo.FindByCodeCoupon(code)
+	if err != nil {
+		return resp, err
+	}
+
+	constraint, err := s.repo.FindByIDCouponConstraint(coupon.ConstraintID)
+	if err != nil {
+		return resp, err
+	}
+
+	resp = CouponResponse{
+		ID:          coupon.ID,
+		Description: coupon.Description,
+		Amount:      coupon.Amount,
+		IsEnable:    coupon.IsEnable,
+		Code:        coupon.Code,
+		Percentage:  coupon.Percentage,
+		Constraint: CouponConstraintResponse{
+			ID:           constraint.ID,
+			ValidityFrom: constraint.ValidityFrom,
+			ValidityTo:   constraint.ValidityTo,
+			TotalUsage:   constraint.TotalUsage,
+			MaxAmount:    constraint.MaxAmount,
+			MaxItems:     constraint.MaxItems,
+			MaxUsage:     constraint.MaxUsage,
+			MinItems:     constraint.MinItems,
+			Combinable:   constraint.Combinable,
+		},
+		CouponType: coupon.CouponType,
+	}
+
+	return resp, nil
+}
+
 /*
 	Al momento de dar de baja un coupon debo comunicarme con ORDER para saber si el cupon está en uso
 	en alguna ORDER. is_enable en false si o si...

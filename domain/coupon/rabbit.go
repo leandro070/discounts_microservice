@@ -367,6 +367,37 @@ func listenCouponsEvents() error {
 				}
 				log.Println("Mensaje reenviado a:", "[REPLY_TO]", rabbitMsg.ReplyTo, "[CORRELATION_ID]", rabbitMsg.CorrelationId)
 
+			case "get_coupon_request":
+
+				log.Printf("INFO: coupon type %s", msg.Type)
+				msgResp, err := GetCouponByCode([]byte(msg.Message))
+				var response []byte
+				if err != nil {
+					response, err = makeResponse("get_coupon_response", []byte(err.Error()), false)
+				} else {
+					response, err = makeResponse("get_coupon_response", msgResp, true)
+				}
+				if err != nil {
+					channel = nil
+					return
+				}
+
+				err = amqpChannel.Publish(
+					"discount_exchange", // exchange
+					"discount_provided", // routing key
+					false,               // mandatory
+					false,               // immediate
+					amqp.Publishing{
+						ContentType: "application/json",
+						Body:        response,
+					},
+				)
+				if err != nil {
+					channel = nil
+					return
+				}
+				log.Println("Mensaje reenviado a:", "[REPLY_TO]", rabbitMsg.ReplyTo, "[CORRELATION_ID]", rabbitMsg.CorrelationId)
+
 			}
 		}
 	}()
