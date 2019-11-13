@@ -61,6 +61,11 @@ func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (CouponResponse, error) {
 		UpdatedAt:    time.Now(),
 	}
 
+	err = constraint.validateNew()
+	if err != nil {
+		return res, err
+	}
+
 	constraint, err = s.repo.InsertCouponConstraint(constraint)
 	if err != nil {
 		return res, err
