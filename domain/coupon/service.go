@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/leandro070/discounts_microservice/utils/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -41,7 +42,7 @@ func (s ServiceCupon) NewCoupon(req *NewCouponRequest) (CouponResponse, error) {
 	validate := validator.New()
 	err := validate.Struct(req)
 	if err != nil {
-		return res, err
+		return res, errors.NewValidation()
 	}
 
 	code := newCode(&s)
@@ -136,19 +137,24 @@ func codeRandomGenerator(n int) string {
 // GetCoupon retorna un cupon segun el id enviado
 func (s ServiceCupon) GetCoupon(couponID string) (CouponResponse, error) {
 	var resp CouponResponse
+
+	if len(couponID) == 0 {
+		return resp, errors.NewValidationField("id", "Id is empty")
+	}
+
 	id, err := primitive.ObjectIDFromHex(couponID)
 	if err != nil {
-		return resp, err
+		return resp, errors.NewValidationField("id", "Id invalid format")
 	}
 
 	coupon, err := s.repo.FindByIDCoupon(id)
 	if err != nil {
-		return resp, err
+		return resp, errors.NotFound
 	}
 
 	constraint, err := s.repo.FindByIDCouponConstraint(coupon.ConstraintID)
 	if err != nil {
-		return resp, err
+		return resp, errors.NotFound
 	}
 
 	resp = CouponResponse{
@@ -179,14 +185,18 @@ func (s ServiceCupon) GetCoupon(couponID string) (CouponResponse, error) {
 func (s ServiceCupon) GetCouponByCode(code string) (CouponResponse, error) {
 	var resp CouponResponse
 
+	if len(code) == 0 {
+		return resp, errors.NewValidationField("code", "coupon code empty")
+	}
+
 	coupon, err := s.repo.FindByCodeCoupon(code)
 	if err != nil {
-		return resp, err
+		return resp, errors.NotFound
 	}
 
 	constraint, err := s.repo.FindByIDCouponConstraint(coupon.ConstraintID)
 	if err != nil {
-		return resp, err
+		return resp, errors.NotFound
 	}
 
 	resp = CouponResponse{
@@ -220,14 +230,18 @@ func (s ServiceCupon) GetCouponByCode(code string) (CouponResponse, error) {
 // AnnulCoupon da de baja un cupon
 func (s ServiceCupon) AnnulCoupon(couponID string) error {
 
+	if len(couponID) == 0 {
+		return errors.NewValidationField("id", "coupon id empty")
+	}
+
 	id, err := primitive.ObjectIDFromHex(couponID)
 	if err != nil {
-		return err
+		return errors.NewValidationField("id", "coupon id invalid")
 	}
 
 	coupon, err := s.repo.FindByIDCoupon(id)
 	if err != nil {
-		return err
+		return errors.NotFound
 	}
 
 	err = s.repo.AnnulCoupon(coupon.ID)
@@ -246,6 +260,11 @@ func (s ServiceCupon) AnnulCoupon(couponID string) error {
 func (s ServiceCupon) UseCoupon(code string, itemsToApply int) error {
 
 	coupon, contraint, err := s.repo.FindByCodeContraint(code)
+	if err != nil {
+		return err
+	}
+
+	err = coupon.validate()
 	if err != nil {
 		return err
 	}
@@ -275,7 +294,12 @@ func (s ServiceCupon) ValidateCoupon(code string, itemsToApply int) error {
 	}
 
 	if coupon.ID == primitive.NilObjectID || contraint.ID == primitive.NilObjectID {
-		return fmt.Errorf("Coupon code not exist")
+		return errors.NotFound
+	}
+
+	err = coupon.validate()
+	if err != nil {
+		return err
 	}
 
 	err = contraint.validate(itemsToApply)

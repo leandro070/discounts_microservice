@@ -397,12 +397,6 @@ func GetCouponByCode(jsonData []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if len(coupon.Code) == 0 {
-		err := fmt.Errorf("coupon code empty")
-		log.Printf("ERROR - GetCouponByCode - %s", err.Error())
-		return nil, err
-	}
-
 	serv, err := NewService()
 	if err != nil {
 		log.Println("ERROR - GetCouponByCode - create service", err.Error())

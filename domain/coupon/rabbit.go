@@ -187,9 +187,32 @@ func couponDisable(couponID string) error {
 		return err
 	}
 
+	_, err = channel.QueueDeclare(
+		"discounts_disabled", //name
+		true,                 //durable
+		false,                //autodeleted
+		false,                //exclusive
+		false,                //noWait
+		nil,                  //args
+	)
+	if err != nil {
+		log.Printf("ERROR: fail create queue discounts_disabled: %s", err.Error())
+	}
+
+	err = channel.QueueBind(
+		"discounts_disabled",
+		"disable_discount",
+		"discount_fanout_exchange",
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Printf("ERROR: fail bind queue discount_provider: %s", err.Error())
+	}
+
 	err = channel.Publish(
 		"discount_fanout_exchange", // exchange
-		"",                         // routing key
+		"disable_discount",         // routing key
 		false,                      // mandatory
 		false,                      // immediate
 		amqp.Publishing{
