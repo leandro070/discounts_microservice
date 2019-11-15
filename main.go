@@ -48,6 +48,7 @@ func main() {
 		v1.GET("/coupons/:id", coupon.GetCoupon)
 		v1.DELETE("/coupons/:id", coupon.AnnulCoupon)
 	}
+	v1.Use(validateAuthentication())
 
 	r.Run(":3030")
 }
