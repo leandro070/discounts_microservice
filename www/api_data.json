@@ -1,5 +1,433 @@
 [
   {
+    "type": "post",
+    "url": "/v1/coupons",
+    "title": "Crear nuevo cupón",
+    "version": "1.0.0",
+    "name": "Create_coupon",
+    "group": "Cupones",
+    "description": "<p>se encargará de crear un cupón y sus restricciones asociadas</p>",
+    "parameter": {
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "String",
+            "optional": false,
+            "field": "description",
+            "description": "<p>Nombre del descuento</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": true,
+            "field": "amount",
+            "description": "<p>Monto fijo de descuento</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": true,
+            "field": "percentaje",
+            "description": "<p>Porcentaje de descuento</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "String",
+            "optional": false,
+            "field": "coupon_type",
+            "description": "<p>Tipo de descuento (&quot;fixed_amount&quot; o &quot;percentage&quot;)</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Object",
+            "optional": false,
+            "field": "constraint",
+            "description": "<p>Restricciones del cupón</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Datetime",
+            "optional": false,
+            "field": "constraint.validity_from",
+            "description": "<p>Fecha de vigencia desde</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Datetime",
+            "optional": false,
+            "field": "constraint.validity_to",
+            "description": "<p>Fecha de vigencia hasta</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "constraint.total_usage",
+            "description": "<p>Total de usos que tiene el cupon actualmente</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "constraint.max_usage",
+            "description": "<p>Máxima cantidad de usos posibles. 0 = Infinito</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "constraint.max_amount",
+            "description": "<p>Si el descuento va por porcentaje entonces monto máximo establece un limite de descuento. 0 = Sin limite</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "constraint.min_items",
+            "description": "<p>Permite que el descuento se aplique cuando hay mas de N items iguales. Ej: Un 2x1. 0 = Sin limites</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "constraint.max_items",
+            "description": "<p>Permite que al descuento se aplique a una cierta cantidad de items. 0 = Sin limites</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Boolean",
+            "optional": false,
+            "field": "constraint.combinable",
+            "description": "<p>Habilita que puedan combinarse con otros cupones.</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Body:",
+        "content": "{\n  \"description\": \"Discount 1\",\n  \"amount\": 0,\n  \"percentage\": null,\n  \"coupon_type\": \"fixed_amount\",\n  \"constraint\": {\n      \"validity_from\": \"2019-09-06T22:00:00.00-03:00\",\n      \"validity_to\": \"2019-09-29T23:00:00.00-03:00\",\n      \"total_usage\": 1,\n      \"max_usage\":20,\n      \"max_amount\": 182372,\n      \"min_items\": 2,\n      \"max_items\": 5,\n      \"combinable\": true\n  }\n}",
+        "type": "json"
+      },
+      {
+        "title": "Header Autorización",
+        "content": "Authorization=bearer {token}",
+        "type": "String"
+      }
+    ],
+    "filename": "./domain/coupon/controller.go",
+    "groupTitle": "Cupones",
+    "error": {
+      "examples": [
+        {
+          "title": "401 Unauthorized",
+          "content": "HTTP/1.1 401 Unauthorized",
+          "type": "json"
+        },
+        {
+          "title": "400 Bad Request",
+          "content": "HTTP/1.1 400 Bad Request\n{\n   \"messages\" : [\n     {\n       \"path\" : \"{Nombre de la propiedad}\",\n       \"message\" : \"{Motivo del error}\"\n     },\n     ...\n  ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "500 Server Error",
+          "content": "HTTP/1.1 500 Internal Server Error\n{\n   \"error\" : \"Not Found\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "DELETE",
+    "url": "/v1/coupons/:id",
+    "title": "Dar de baja un cupón",
+    "version": "1.0.0",
+    "name": "Delete_coupon",
+    "group": "Cupones",
+    "description": "<p>buscará un coupon y su restricción asociada y los dará de baja</p>",
+    "success": {
+      "examples": [
+        {
+          "title": "Respuesta",
+          "content": "    HTTP/1.1 200 OK\n\t{\n\t  \"id\": \"asd18cas18d15df1v6d\"\n\t  \"description\": \"Coupon $200\",\n\t  \"code\": \"ASD123\"\n\t  \"amount\": 200,\n\t  \"percentage\": 0,\n\t  \"coupon_type\": \"fixed_amount\",\n\t  \"constraint\": {\n\t      \"id\": \"asd18cas18d15df1v6d\",\n\t\t  \"validity_from\": \"2019-09-06T22:00:00.00-03:00\",\n\t      \"validity_to\": \"2019-09-29T23:00:00.00-03:00\",\n\t      \"total_usage\": 1,\n\t      \"max_usage\": 20,\n\t      \"max_amount\": 182372,\n\t      \"min_items\": 2,\n\t      \"max_items\": 5,\n\t      \"combinable\": true\n\t  }\n\t}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./domain/coupon/controller.go",
+    "groupTitle": "Cupones",
+    "examples": [
+      {
+        "title": "Header Autorización",
+        "content": "Authorization=bearer {token}",
+        "type": "String"
+      }
+    ],
+    "error": {
+      "examples": [
+        {
+          "title": "401 Unauthorized",
+          "content": "HTTP/1.1 401 Unauthorized",
+          "type": "json"
+        },
+        {
+          "title": "400 Bad Request",
+          "content": "HTTP/1.1 400 Bad Request\n{\n   \"messages\" : [\n     {\n       \"path\" : \"{Nombre de la propiedad}\",\n       \"message\" : \"{Motivo del error}\"\n     },\n     ...\n  ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "500 Server Error",
+          "content": "HTTP/1.1 500 Internal Server Error\n{\n   \"error\" : \"Not Found\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "post",
+    "url": "/v1/coupons/:id",
+    "title": "Devuelve el cupón",
+    "version": "1.0.0",
+    "name": "Get_coupon",
+    "group": "Cupones",
+    "description": "<p>buscará un coupon y su restricción asociada</p>",
+    "success": {
+      "examples": [
+        {
+          "title": "Respuesta",
+          "content": "    HTTP/1.1 200 OK\n\t{\n\t  \"id\": \"asd18cas18d15df1v6d\"\n\t  \"description\": \"Coupon $200\",\n\t  \"code\": \"ASD123\"\n\t  \"amount\": 200,\n\t  \"percentage\": 0,\n\t  \"coupon_type\": \"fixed_amount\",\n\t  \"constraint\": {\n\t      \"id\": \"asd18cas18d15df1v6d\",\n\t\t  \"validity_from\": \"2019-09-06T22:00:00.00-03:00\",\n\t      \"validity_to\": \"2019-09-29T23:00:00.00-03:00\",\n\t      \"total_usage\": 1,\n\t      \"max_usage\": 20,\n\t      \"max_amount\": 182372,\n\t      \"min_items\": 2,\n\t      \"max_items\": 5,\n\t      \"combinable\": true\n\t  }\n\t}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./domain/coupon/controller.go",
+    "groupTitle": "Cupones",
+    "examples": [
+      {
+        "title": "Header Autorización",
+        "content": "Authorization=bearer {token}",
+        "type": "String"
+      }
+    ],
+    "error": {
+      "examples": [
+        {
+          "title": "401 Unauthorized",
+          "content": "HTTP/1.1 401 Unauthorized",
+          "type": "json"
+        },
+        {
+          "title": "400 Bad Request",
+          "content": "HTTP/1.1 400 Bad Request\n{\n   \"messages\" : [\n     {\n       \"path\" : \"{Nombre de la propiedad}\",\n       \"message\" : \"{Motivo del error}\"\n     },\n     ...\n  ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "500 Server Error",
+          "content": "HTTP/1.1 500 Internal Server Error\n{\n   \"error\" : \"Not Found\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "direct",
+    "url": "discount_exchange/discount_requested/get_coupon_request",
+    "title": "Get cupon",
+    "group": "RabbitMQ",
+    "description": "<p>DiscountService recibirá un codigo de cupon, validará que ese cupon esté vigente.</p>",
+    "parameter": {
+      "examples": [
+        {
+          "title": "{RabbitMQ Message} Request-Example:",
+          "content": "    RoutingKey: \"discount_requested\"\n    Exchange: \"discount_exchange\"\n    Queue: \"discount_provider\"\n\t   Type: \"direct\"",
+          "type": "json"
+        },
+        {
+          "title": "{RabbitMQ Message} Response-Example:",
+          "content": "    RoutingKey: \"discount_provided\"\n    Exchange: \"discount_exchange\"\n    Queue: \"discount_consumer\"\n\t   Type: \"direct\"",
+          "type": "json"
+        }
+      ],
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "String",
+            "optional": false,
+            "field": "code",
+            "description": "<p>Codigo del cupon</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Example usage",
+        "content": "{\n   \"type\": \"get_coupon_request\",\n   \"message\": \"{\\\"id\\\":\\\"5db36a4e80bea523b632258c\\\",\\\"description\\\":\\\"Discount 1\\\",\\\"amount\\\":0,\\\"percentage\\\":0,\\\"is_enable\\\":false,\\\"code\\\":\\\"UOATI8\\\",\\\"constraint\\\":{\\\"id\\\":\\\"5db36a4e80bea523b632258b\\\",\\\"validity_from\\\":\\\"2019-09-07T01:00:00Z\\\",\\\"validity_to\\\":\\\"2019-11-30T02:00:00Z\\\",\\\"total_usage\\\":19,\\\"max_usage\\\":20,\\\"max_amount\\\":182372,\\\"min_items\\\":2,\\\"max_items\\\":5,\\\"combinable\\\":true},\\\"coupon_type\\\":\\\"fixed_amount\\\"}\"\n}",
+        "type": "json"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "Response-Mensaje",
+          "content": "    {\n       \"type\": \"get_coupon_response\",\n       \"message\": \"Coupon valid\",\n\t\t  \"success\": \"true\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response-Mensaje",
+          "content": "    {\n       \"type\": \"get_coupon_response\",\n       \"message\": \"Max usage for coupon\",\n\t\t  \"success\": \"false\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./domain/coupon/controller.go",
+    "groupTitle": "RabbitMQ",
+    "name": "DirectDiscount_exchangeDiscount_requestedGet_coupon_request"
+  },
+  {
+    "type": "direct",
+    "url": "discount_exchange/discount_requested/use_coupon_request",
+    "title": "Usar cupon",
+    "group": "RabbitMQ",
+    "description": "<p>DiscountService recibirá un codigo de cupon, validará que ese cupon esté vigente y luego aumentará la variable total_usage en 1. En caso de querer solo validar usar validate_request</p>",
+    "parameter": {
+      "examples": [
+        {
+          "title": "{RabbitMQ Message} Request-Example:",
+          "content": "    RoutingKey: \"discount_requested\"\n    Exchange: \"discount_exchange\"\n    Queue: \"discount_provider\"\n\t   Type: \"direct\"",
+          "type": "json"
+        },
+        {
+          "title": "{RabbitMQ Message} Response-Example:",
+          "content": "    RoutingKey: \"discount_provided\"\n    Exchange: \"discount_exchange\"\n    Queue: \"discount_consumer\"\n\t   Type: \"direct\"",
+          "type": "json"
+        }
+      ],
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "String",
+            "optional": false,
+            "field": "code",
+            "description": "<p>Codigo del cupon</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "items_to_apply",
+            "description": "<p>Cantidad de articulos que a los que se quiere aplicar</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Example usage",
+        "content": "{\n   \"type\": \"use_coupon_request\",\n   \"message\": \"{\\\"code\\\": \\\"UOATI8\\\", \\\"items_to_apply\\\": 2}\"\n}",
+        "type": "json"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "Response-Mensaje",
+          "content": "    {\n       \"type\": \"use_coupon_response\",\n       \"message\": \"Success use cupon\",\n\t\t  \"success\": \"true\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response-Mensaje",
+          "content": "    {\n       \"type\": \"use_coupon_response\",\n       \"message\": \"Coupon code empty\",\n\t\t  \"success\": \"false\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./domain/coupon/controller.go",
+    "groupTitle": "RabbitMQ",
+    "name": "DirectDiscount_exchangeDiscount_requestedUse_coupon_request"
+  },
+  {
+    "type": "direct",
+    "url": "discount_exchange/discount_requested/validate_request",
+    "title": "Validar cupon",
+    "group": "RabbitMQ",
+    "description": "<p>DiscountService recibirá un codigo de cupon, validará que ese cupon esté vigente.</p>",
+    "parameter": {
+      "examples": [
+        {
+          "title": "{RabbitMQ Message} Request-Example:",
+          "content": "    RoutingKey: \"discount_requested\"\n    Exchange: \"discount_exchange\"\n    Queue: \"discount_provider\"\n\t   Type: \"direct\"",
+          "type": "json"
+        },
+        {
+          "title": "{RabbitMQ Message} Response-Example:",
+          "content": "    RoutingKey: \"discount_provided\"\n    Exchange: \"discount_exchange\"\n    Queue: \"discount_consumer\"\n\t   Type: \"direct\"",
+          "type": "json"
+        }
+      ],
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "String",
+            "optional": false,
+            "field": "code",
+            "description": "<p>Codigo del cupon</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "Number",
+            "optional": false,
+            "field": "items_to_apply",
+            "description": "<p>Cantidad de articulos que a los que se quiere aplicar</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Example usage",
+        "content": "{\n   \"type\": \"validate_request\",\n   \"message\": \"{\\\"code\\\": \\\"UOATI8\\\", \\\"items_to_apply\\\": 2}\"\n}",
+        "type": "json"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "Response-Mensaje",
+          "content": "    {\n       \"type\": \"validate_response\",\n       \"message\": \"Coupon valid\",\n\t\t  \"success\": \"true\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response-Mensaje",
+          "content": "    {\n       \"type\": \"validate_response\",\n       \"message\": \"Max usage for coupon\",\n\t\t  \"success\": \"false\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./domain/coupon/controller.go",
+    "groupTitle": "RabbitMQ",
+    "name": "DirectDiscount_exchangeDiscount_requestedValidate_request"
+  },
+  {
     "type": "fanout",
     "url": "auth/logout",
     "title": "Logout de Usuarios",
@@ -15,7 +443,7 @@
       ]
     },
     "version": "0.0.0",
-    "filename": "./gateway/rabbit/rabbit.go",
+    "filename": "./domain/coupon/rabbit.go",
     "groupTitle": "RabbitMQ_GET",
     "name": "FanoutAuthLogout"
   }
